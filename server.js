@@ -1,6 +1,8 @@
 const express = require('express');
 const bodyParser = require('body-parser')
 const mysql = require('mysql')
+const path = require('path');
+const { log } = require('console');
 const app = express();
 
 
@@ -19,9 +21,17 @@ const connection = mysql.createConnection({
 connection.connect()
 console.log('Connected to MySQL Database');
 
-app.post('/test', (req, res) => {
-    console.log(req.body);
-    res.send('ok')
+app.get('/test', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/confirmation.html'));
+})
+
+app.get('/users', (req, res) => {
+    connection.query('SELECT * FROM users', (err, result, fields) => {
+        if (err)
+            throw err;
+        else
+            res.send(result)
+    })
 })
 
 app.post('/addUser', (req, res) => {
@@ -31,12 +41,14 @@ app.post('/addUser', (req, res) => {
     let mobile = reqObj['uMobile']
     let location = reqObj['uLocation']
 
-    let sqlQuery = "INSERT INTO users(name,email,mobile,location) values('" + name + "','" + email + "','" + mobile + "','" + location + "')";
+    let sqlQuery = "INSERT INTO users(name,email,mobile,location) values(?,?,?,?)";
+    let value = [name, email, mobile, location]
 
     console.log(sqlQuery);
-    connection.query(sqlQuery, (err, result) => {
+    connection.query(sqlQuery, value, (err, result) => {
         if (err) throw err;
-        res.send('User Added.')
+        console.log(path.join('public', '/confirmation.html'));
+        res.sendFile(path.join(__dirname, 'public/confirmation.html'));
     })
 })
 
